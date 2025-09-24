@@ -5,18 +5,15 @@
 
 import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { usePathname } from 'next/navigation';
 
 export default function Moktak() {
   const [hitCount, setHitCount] = useState<number>(0)
   const audioRef = useRef<HTMLAudioElement | null>(null)
-  const pathname = usePathname()
   
-  // Get base path for audio file
+  // Use window.location to determine the correct path dynamically
   const getAudioPath = () => {
     if (typeof window !== 'undefined') {
-      // Use the current base path from the browser
-      const basePath = window.location.pathname.includes('/nfc-moktak') ? '/nfc-moktak' : '';
+      const basePath = window.location.pathname.startsWith('/nfc-moktak') ? '/nfc-moktak' : '';
       return `${basePath}/tak.mp3`;
     }
     return '/tak.mp3';
@@ -26,6 +23,7 @@ export default function Moktak() {
     try {
       if (!audioRef.current) {
         audioRef.current = new Audio(getAudioPath())
+        console.log('Audio path:', getAudioPath()); // 디버깅용
       }
       
       // Reset audio to beginning and play
