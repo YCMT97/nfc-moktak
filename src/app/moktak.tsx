@@ -9,7 +9,7 @@ import Lottie, { LottieRefCurrentProps } from 'lottie-react';
 type AnimationType = 'launch' | 'manual' | 'auto';
 
 interface AnimationState {
-  data: any;
+  data: object | null;
   loading: boolean;
   error: string | null;
 }
@@ -100,17 +100,11 @@ export default function Moktak() {
 
   // Play sound function for specific type
   const playSound = (type: AnimationType) => {
+    if ( type == 'launch') return; // No sound for launch
+
     try {
-      let audioRef: React.MutableRefObject<HTMLAudioElement | null>;
-      let audioFile: string;
-      
-      if ( type == 'manual') {
-        audioRef = manualAudioRef;
-        audioFile = 'manual_sound.wav';
-      } else {
-        audioRef = autoAudioRef;
-        audioFile = 'auto_sound.wav';
-      }
+      const audioRef = type == 'manual' ? manualAudioRef : autoAudioRef;
+      const audioFile = type == 'manual' ? 'manual_sound.wav' : 'auto_sound.wav';
       
       if (!audioRef.current) {
         audioRef.current = new Audio(getAudioPath(audioFile));
@@ -118,7 +112,7 @@ export default function Moktak() {
       }
       
       audioRef.current.currentTime = 0;
-      audioRef.current.play().catch((error: any) => {
+      audioRef.current.play().catch((error: unknown) => {
         console.warn(`${type} audio play failed:`, error);
       });
       
