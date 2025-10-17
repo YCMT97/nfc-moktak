@@ -5,8 +5,10 @@ const isProd = process.env.NODE_ENV === 'production';
 const nextConfig: NextConfig = {
   ...(isProd && { output: 'export' }),
   trailingSlash: true,
-  basePath: isProd ? '/nfc-moktak' : '',
-  assetPrefix: isProd ? '/nfc-moktak/' : '',
+  // basePath: isProd ? '/nfc-moktak' : '',
+  // assetPrefix: isProd ? '/nfc-moktak/' : '',
+  basePath: '',
+  assetPrefix: '',
   images: {
     unoptimized: true
   }
