@@ -210,7 +210,7 @@ export default function Moktak() {
       return (
         <div className="flex flex-col items-center justify-center space-y-2">
           <img 
-            src={getImagePath('images/img_0.png')} 
+            src={getImagePath('images/moktak.png')} 
             alt="목탁" 
             className="object-contain opacity-50"
           />
@@ -223,7 +223,7 @@ export default function Moktak() {
       return (
         <div className="flex flex-col items-center justify-center space-y-2 text-center">
           <img 
-            src={getImagePath('images/img_0.png')} 
+            src={getImagePath('images/moktak.png')} 
             alt="목탁" 
             className="object-contain"
           />
@@ -237,7 +237,7 @@ export default function Moktak() {
         <div className="relative flex items-center justify-center">
           {/* 기본 이미지 - 애니메이션이 재생되지 않을 때 표시 */}
           <img 
-            src={getImagePath('images/img_0.png')} 
+            src={getImagePath('images/moktak.png')} 
             alt="목탁" 
             className={`object-contain absolute transition-opacity duration-300 ${
               isAnimationPlaying[type] ? 'opacity-0' : 'opacity-100'
@@ -269,7 +269,7 @@ export default function Moktak() {
     return (
       <div className="flex items-center justify-center">
         <img 
-          src={getImagePath('images/img_0.png')} 
+          src={getImagePath('images/moktak.png')} 
           alt="목탁" 
           className="object-contain"
         />
