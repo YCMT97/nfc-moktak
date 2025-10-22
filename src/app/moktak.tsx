@@ -278,7 +278,7 @@ export default function Moktak() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-slate-50 relative">
+    <div className="h-screen bg-gradient-to-b from-white to-slate-50 relative overflow-hidden">
       {/* Launch Animation Overlay */}
       {showLaunchAnimation && animations.launch.data && !animations.launch.error && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-white">
@@ -310,7 +310,7 @@ export default function Moktak() {
         showLaunchAnimation ? 'opacity-0' : 'opacity-100'
       }`}>
         {/* Header with refresh button */}
-        <div className="flex justify-between items-center px-6 pt-4 pb-2">
+        <div className="flex justify-between items-center px-4 pt-4 pb-2">
           <div className="flex items-center">
             <img 
               src={getImagePath('images/logo@2x.png')}
@@ -341,7 +341,7 @@ export default function Moktak() {
         </div>
 
         {/* Main content area */}
-        <div className="flex-1 flex flex-col px-6 overflow-hidden pb-20">
+        <div className="flex-1 flex flex-col px-4 overflow-hidden pb-20">
         <div className="w-full flex flex-col items-center">
           {/* Toggle Button */}
           <div className="mb-6">
