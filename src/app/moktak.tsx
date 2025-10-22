@@ -8,13 +8,22 @@ import Lottie, { LottieRefCurrentProps } from 'lottie-react';
 
 type AnimationType = 'launch' | 'manual' | 'auto';
 
+
 interface AnimationState {
   data: object | null;
   loading: boolean;
   error: string | null;
 }
 
-type AutoPlayState = 'ready' | 'playing' | 'paused';
+type AutoPlayState = 'ready' | 'playing' | 'paused' | 'prepare';
+
+const getAudioPath = (filename: string) => {
+  if (typeof window !== 'undefined') {
+    const basePath = window.location.pathname.startsWith('/nfc-moktak') ? '/nfc-moktak' : '';
+    return `${basePath}/${filename}`;
+  }
+  return `/${filename}`;
+};
 
 export default function Moktak() {
   const [hitCount, setHitCount] = useState<number>(0)
@@ -34,13 +43,59 @@ export default function Moktak() {
   const launchLottieRef = useRef<LottieRefCurrentProps>(null)
   const manualLottieRef = useRef<LottieRefCurrentProps>(null)
   const autoLottieRef = useRef<LottieRefCurrentProps>(null)
-  
+
+  // 최신 상태 추적용 ref
+  const autoPlayStateRef = useRef(autoPlayState);
+  const isManualModeRef = useRef(isManualMode);
+  useEffect(() => { autoPlayStateRef.current = autoPlayState; }, [autoPlayState]);
+  useEffect(() => { isManualModeRef.current = isManualMode; }, [isManualMode]);
+
+  // ... (기존 코드 계속)
+
+
+  // 자동 재생 상태 기반으로 오디오/애니메이션 제어
+  useEffect(() => {
+    console.log('autoPlayState changed to:', autoPlayState, 'isManualMode:', isManualMode);
+    if (!autoLottieRef.current) return;
+    if (!autoAudioRef.current) {
+      autoAudioRef.current = new Audio(getAudioPath('auto_sound.wav'));
+    }
+    const audio = autoAudioRef.current;
+    if (autoPlayState === 'prepare') {
+      // Lottie 연속 재생: playSegments([0, op], true)로 robust하게 반복
+      if (autoLottieRef.current && animations.auto.data) {
+        const op = (animations.auto.data as any).op ?? 60; // fallback 60프레임
+        autoLottieRef.current.playSegments([0, op], true);
+      }
+      if (audio) {
+        audio.currentTime = 0;
+        audio.play().then(() => {
+          setHitCount((c: number) => c + 1);
+        }).catch((e: unknown) => console.warn('auto audio play failed:', e));
+      }
+      // 상태 변경은 onComplete에서만!
+    } else if (autoPlayState === 'playing' && !isManualMode) {
+      // 유지만 함
+    } else {
+      autoLottieRef.current?.pause();
+      audio.pause();
+      audio.currentTime = 0;
+    }
+    return () => {
+      audio.pause();
+      audio.currentTime = 0;
+    };
+  }, [autoPlayState, isManualMode]);
+
+
   const [animations, setAnimations] = useState<Record<AnimationType, AnimationState>>({
     launch: { data: null, loading: true, error: null },
     manual: { data: null, loading: true, error: null },
     auto: { data: null, loading: true, error: null }
   });
-  
+
+  // 오디오 경로 반환 함수 (useEffect 위로 이동)
+
   // Load all Lottie animation data
   useEffect(() => {
     const loadAnimations = async () => {
@@ -50,34 +105,34 @@ export default function Moktak() {
         manual: 'manual_ani.json',
         auto: 'auto_ani.json'
       };
-      
+
       for (const [type, filename] of Object.entries(animationFiles)) {
         try {
           const response = await fetch(`${basePath}/${filename}`);
-          
+
           if (!response.ok) {
             throw new Error(`${filename} 파일을 불러올 수 없습니다 (${response.status})`);
           }
-          
+
           const data = await response.json();
-          setAnimations(prev => ({
+          setAnimations((prev: Record<AnimationType, AnimationState>) => ({
             ...prev,
             [type]: { data, loading: false, error: null }
           }));
         } catch (error) {
           console.error(`Failed to load ${filename}:`, error);
-          setAnimations(prev => ({
+          setAnimations((prev: Record<AnimationType, AnimationState>) => ({
             ...prev,
-            [type]: { 
-              data: null, 
-              loading: false, 
-              error: error instanceof Error ? error.message : `${filename} 로드에 실패했습니다` 
+            [type]: {
+              data: null,
+              loading: false,
+              error: error instanceof Error ? error.message : `${filename} 로드에 실패했습니다`
             }
           }));
         }
       }
     };
-    
+
     loadAnimations();
   }, []);
 
@@ -87,7 +142,7 @@ export default function Moktak() {
       // 약간의 지연 후 애니메이션 시작
       const timer = setTimeout(() => {
         if (launchLottieRef.current) {
-          setIsAnimationPlaying(prev => ({ ...prev, launch: true }));
+          setIsAnimationPlaying((prev: Record<AnimationType, boolean>) => ({ ...prev, launch: true }));
           launchLottieRef.current.play();
         }
       }, 500);
@@ -120,21 +175,21 @@ export default function Moktak() {
       manual: manualLottieRef,
       auto: autoLottieRef
     };
-    
+
     const ref = refs[type];
     const animationState = animations[type];
-    
+
     if (ref.current && animationState.data && !animationState.error) {
       try {
         // 애니메이션 시작 상태로 설정
-        setIsAnimationPlaying(prev => ({ ...prev, [type]: true }));
-        
+        setIsAnimationPlaying((prev: Record<AnimationType, boolean>) => ({ ...prev, [type]: true }));
+
         ref.current.stop();
         ref.current.play();
       } catch (animError) {
         console.warn(`${type} animation play failed:`, animError);
         // 에러 발생 시 애니메이션 상태를 false로 설정
-        setIsAnimationPlaying(prev => ({ ...prev, [type]: false }));
+        setIsAnimationPlaying((prev: Record<AnimationType, boolean>) => ({ ...prev, [type]: false }));
       }
     }
   };
@@ -163,7 +218,7 @@ export default function Moktak() {
           console.warn(`${type} audio play failed:`, error);
         });
       }
-      setHitCount((c) => c + 1);
+      setHitCount((c: number) => c + 1);
     } catch (e) {
       console.warn(`${type} audio error:`, e);
     }
@@ -177,41 +232,21 @@ export default function Moktak() {
     playSound('manual');
   };
 
-  // Auto: Animation + auto sound (연속 재생 시 오디오 객체를 완전히 제거 후 새로 생성)
-  const playAutoAnimationWithSound = () => {
-    setAutoPlayState('playing');
-    playAnimation('auto');
-    // 이전 오디오 객체가 있으면 완전히 해제
-    if (autoAudioRef.current) {
-      autoAudioRef.current.pause();
-      autoAudioRef.current.src = '';
-      autoAudioRef.current = null;
-    }
-    // 새 오디오 객체 생성 및 재생
-    const audioFile = 'auto_sound.wav';
-    const audio = new Audio(getAudioPath(audioFile));
-    autoAudioRef.current = audio;
-    audio.load();
-    audio.play().catch((error: unknown) => {
-      console.warn('auto audio play failed:', error);
-    });
-    setHitCount((c) => c + 1);
-    // 오디오가 끝나도 아무 동작하지 않음 (루프 트리거는 Lottie onComplete에서만)
-    audio.onended = null;
-  };
 
   // Auto pause function
   const pauseAutoPlaying = () => {
     setAutoPlayState('paused');
-    // 오디오 일시정지
+    // 오디오 완전 정지 및 해제
     if (autoAudioRef.current) {
       autoAudioRef.current.pause();
+      autoAudioRef.current.currentTime = 0;
+      autoAudioRef.current.load();
     }
     // 애니메이션 일시정지
     if (autoLottieRef.current) {
       autoLottieRef.current.pause();
     }
-    setIsAnimationPlaying(prev => ({ ...prev, auto: false }));
+    setIsAnimationPlaying((prev: Record<AnimationType, boolean>) => ({ ...prev, auto: false }));
   };
 
   // Resume auto playing
@@ -222,81 +257,81 @@ export default function Moktak() {
   };
 
   // Check if any animation is still loading
-  const isAnyLoading = Object.values(animations).some(anim => anim.loading);
+  const isAnyLoading = (Object.values(animations) as AnimationState[]).some(anim => anim.loading);
 
   // Animation component renderer
   const renderAnimation = (type: AnimationType, ref: React.RefObject<LottieRefCurrentProps | null>) => {
     const animationState = animations[type];
-    
+
     if (animationState.loading) {
       return (
         <div className="flex flex-col items-center justify-center space-y-2">
-          <img 
-            src={getImagePath('images/moktak.png')} 
-            alt="목탁" 
+          <img
+            src={getImagePath('images/moktak.png')}
+            alt="목탁"
             className="object-contain opacity-50"
           />
           <p className="text-xs text-gray-500">로딩 중...</p>
         </div>
       );
     }
-    
+
     if (animationState.error) {
       return (
         <div className="flex flex-col items-center justify-center space-y-2 text-center">
-          <img 
-            src={getImagePath('images/moktak.png')} 
-            alt="목탁" 
+          <img
+            src={getImagePath('images/moktak.png')}
+            alt="목탁"
             className="object-contain"
           />
           <p className="text-xs text-red-600">{animationState.error}</p>
         </div>
       );
     }
-    
+
     if (animationState.data) {
       return (
         <div className="relative flex items-center justify-center">
           {/* 기본 이미지 - 애니메이션이 재생되지 않을 때 표시 */}
-          <img 
-            src={getImagePath('images/moktak.png')} 
-            alt="목탁" 
-            className={`object-contain absolute transition-opacity duration-300 ${
-              isAnimationPlaying[type] ? 'opacity-0' : 'opacity-100'
-            }`}
+          <img
+            src={getImagePath('images/moktak.png')}
+            alt="목탁"
+            className="object-contain absolute opacity-0"
           />
-          {/* Lottie 애니메이션 - 원본 크기 사용 */}
+          {/* Lottie 애니메이션 - 항상 보이게 */}
           <Lottie
             lottieRef={ref}
             animationData={animationState.data}
             autoplay={false}
             loop={false}
             onComplete={() => {
-              // 애니메이션 완료 시 상태를 false로 설정
               setIsAnimationPlaying(prev => ({ ...prev, [type]: false }));
-              // 자동 모드에서는 애니메이션이 끝날 때만 다음 루프 트리거
               if (type === 'auto') {
-                if (!isManualMode && autoPlayState === 'playing') {
-                  playAutoAnimationWithSound();
-                } else if (isManualMode) {
+                if (!isManualModeRef.current) {
+                  setAutoPlayState('playing');
+                  setTimeout(() => setAutoPlayState('prepare'), 10);
+                } else {
                   setAutoPlayState('ready');
                 }
+              } else {
+                setAutoPlayState('ready');
               }
+              console.log('onComplete called for', type);
             }}
-            style={{ 
-              opacity: isAnimationPlaying[type] ? 1 : 0,
+            style={{
+              opacity: 1,
               transition: 'opacity 0.3s ease'
             }}
           />
         </div>
       );
     }
-    
+
     return (
       <div className="flex items-center justify-center">
-        <img 
-          src={getImagePath('images/moktak.png')} 
-          alt="목탁" 
+        <img
+          src={getImagePath('images/moktak.png')}
+          alt="목탁"
           className="object-contain"
         />
       </div>
@@ -305,6 +340,10 @@ export default function Moktak() {
 
   return (
     <div className="h-screen bg-gradient-to-b from-white to-slate-50 relative overflow-hidden">
+      {/* DEBUG: autoPlayState 값 표시 */}
+      <div style={{ position: 'fixed', top: 8, right: 16, zIndex: 9999, background: 'rgba(0,0,0,0.08)', color: '#684B45', fontSize: 14, padding: '2px 8px', borderRadius: 6 }}>
+        <b>autoPlayState:</b> {autoPlayState}
+      </div>
       {/* Launch Animation Overlay */}
       {showLaunchAnimation && animations.launch.data && !animations.launch.error && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-white">
@@ -332,13 +371,12 @@ export default function Moktak() {
       )}
 
       {/* Main Content */}
-      <div className={`h-screen flex flex-col transition-opacity duration-500 overflow-hidden ${
-        showLaunchAnimation ? 'opacity-0' : 'opacity-100'
-      }`}>
+      <div className={`h-screen flex flex-col transition-opacity duration-500 overflow-hidden ${showLaunchAnimation ? 'opacity-0' : 'opacity-100'
+        }`}>
         {/* Header with refresh button */}
         <div className="flex justify-between items-center px-4 pt-4 pb-2">
           <div className="flex items-center">
-            <img 
+            <img
               src={getImagePath('images/logo@2x.png')}
               srcSet={`${getImagePath('images/logo.png')} 1x, ${getImagePath('images/logo@2x.png')} 2x`}
               alt="영천목탁 로고"
@@ -357,7 +395,7 @@ export default function Moktak() {
             className="p-2 rounded-full hover:bg-gray-100 transition-colors"
             title="횟수 초기화"
           >
-            <img 
+            <img
               src={getImagePath('images/reset_icon@2x.png')}
               srcSet={`${getImagePath('images/reset_icon.png')} 1x, ${getImagePath('images/reset_icon@2x.png')} 2x`}
               alt="초기화"
@@ -368,133 +406,128 @@ export default function Moktak() {
 
         {/* Main content area */}
         <div className="flex-1 flex flex-col px-4 overflow-hidden pb-20">
-        <div className="w-full flex flex-col items-center">
-          {/* Toggle Button */}
-          <div className="mb-6">
-            <div className="flex bg-gray-300 rounded-full p-1 shadow-sm">
-              <button
-                className={`py-2 px-6 rounded-full font-semibold text-white transition-all duration-200 ${
-                  isManualMode 
-                    ? 'shadow-md' 
-                    : 'bg-transparent text-gray-700 hover:text-gray-900'
-                }`}
-                style={isManualMode ? { backgroundColor: '#684B45' } : {}}
-                onClick={() => setIsManualMode(true)}
-              >
-                수동
-              </button>
-              <button
-                className={`py-2 px-6 rounded-full font-semibold text-white transition-all duration-200 ${
-                  !isManualMode 
-                    ? 'shadow-md' 
-                    : 'bg-transparent text-gray-700 hover:text-gray-900'
-                }`}
-                style={!isManualMode ? { backgroundColor: '#684B45' } : {}}
-                onClick={() => setIsManualMode(false)}
-              >
-                자동
-              </button>
-            </div>
-          </div>
-
-          {/* Message and Count */}
-          <div className="mb-4 text-center">
-            {isManualMode ? (
-              <>
-                <h1 className="text-3xl font-bold mb-2 font-school" style={{ color: '#684B45' }}>목탁! 치기</h1>
-                <div className="text-6xl font-bold" style={{ color: '#684B45' }}>{hitCount}</div>
-              </>
-            ) : (
-              <>
-                <h1 className="text-2xl font-bold mb-2 font-school" style={{ color: '#684B45' }}>
-                  {autoPlayState === 'playing'
-                    ? '마음이 편안해지는 중' 
-                    : autoPlayState === 'paused'
-                      ? '명상중... 방해금지' 
-                      : '울림 자동재생'
-                  }
-                </h1>
-                <div className="text-5xl font-bold" style={{ color: '#684B45' }}>
-                  {autoPlayState === 'playing'
-                    ? 'Playing' 
-                    : autoPlayState === 'paused'
-                      ? 'Pause' 
-                      : 'Ready'
-                  }
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Animation Display - Fixed Height */}
-          <div className="flex flex-col items-center h-64 justify-start">
-            <div className="flex items-center justify-center mb-4">
-              {isManualMode ? (
-                <div 
-                  className="cursor-pointer transition-transform hover:scale-105 active:scale-95"
-                  onClick={playManualAnimationWithSound}
-                >
-                  {renderAnimation('manual', manualLottieRef)}
-                </div>
-              ) : (
-                <div>
-                  {renderAnimation('auto', autoLottieRef)}
-                </div>
-              )}
-            </div>
-            
-            {/* Button Area - Fixed Position */}
-            <div className="h-16 flex items-center justify-center">
-              {!isManualMode && (
+          <div className="w-full flex flex-col items-center">
+            {/* Toggle Button */}
+            <div className="mb-6">
+              <div className="flex bg-gray-300 rounded-full p-1 shadow-sm">
                 <button
-                  className={`px-12 py-4 rounded-full font-bold text-lg transition-colors ${
-                    animations.auto.loading 
-                      ? 'bg-gray-400 text-gray-200 cursor-not-allowed' 
-                      : 'text-white shadow-lg hover:opacity-90'
-                  }`}
-                  style={!animations.auto.loading ? { 
-                    backgroundColor: '#684B45'
-                  } : {}}
-                  onClick={
-                    autoPlayState === 'playing'
-                      ? pauseAutoPlaying 
-                      : autoPlayState === 'paused'
-                        ? resumeAutoPlaying 
-                        : playAutoAnimationWithSound
-                  }
-                  disabled={animations.auto.loading}
+                  className={`py-2 px-6 rounded-full font-semibold text-white transition-all duration-200 ${isManualMode
+                      ? 'shadow-md'
+                      : 'bg-transparent text-gray-700 hover:text-gray-900'
+                    }`}
+                  style={isManualMode ? { backgroundColor: '#684B45' } : {}}
+                  onClick={() => setIsManualMode(true)}
                 >
-                  <div className="flex items-center">
-                    <span>
-                      {animations.auto.loading 
-                        ? '로딩 중...' 
-                        : autoPlayState === 'playing'
-                          ? '일시정지' 
-                          : autoPlayState === 'paused'
-                            ? '다시재생'
-                            : '자동재생'
-                      }
-                    </span>
-                    {!animations.auto.loading && (
-                      <img 
-                        src={autoPlayState === 'playing' 
-                          ? getImagePath('images/pause_icon@2x.png')
-                          : getImagePath('images/play_icon@2x.png')
-                        }
-                        srcSet={autoPlayState === 'playing'
-                          ? `${getImagePath('images/pause_icon.png')} 1x, ${getImagePath('images/pause_icon@2x.png')} 2x`
-                          : `${getImagePath('images/play_icon.png')} 1x, ${getImagePath('images/play_icon@2x.png')} 2x`
-                        }
-                        alt={autoPlayState === 'playing' ? '일시정지' : '재생'}
-                        className="w-4 h-4 ml-2"
-                      />
-                    )}
-                  </div>
+                  수동
                 </button>
+                <button
+                  className={`py-2 px-6 rounded-full font-semibold text-white transition-all duration-200 ${!isManualMode
+                      ? 'shadow-md'
+                      : 'bg-transparent text-gray-700 hover:text-gray-900'
+                    }`}
+                  style={!isManualMode ? { backgroundColor: '#684B45' } : {}}
+                  onClick={() => setIsManualMode(false)}
+                >
+                  자동
+                </button>
+              </div>
+            </div>
+
+            {/* Message and Count */}
+            <div className="mb-4 text-center">
+              {isManualMode ? (
+                <>
+                  <h1 className="text-3xl font-bold mb-2 font-school" style={{ color: '#684B45' }}>목탁! 치기</h1>
+                  <div className="text-6xl font-bold" style={{ color: '#684B45' }}>{hitCount}</div>
+                </>
+              ) : (
+                <>
+                  <h1 className="text-2xl font-bold mb-2 font-school" style={{ color: '#684B45' }}>
+                    {autoPlayState === 'playing'
+                      ? '마음이 편안해지는 중'
+                      : autoPlayState === 'paused'
+                        ? '명상중... 방해금지'
+                        : '울림 자동재생'
+                    }
+                  </h1>
+                  <div className="text-5xl font-bold" style={{ color: '#684B45' }}>
+                    {(autoPlayState === 'playing' || autoPlayState === 'prepare')
+                      ? 'Playing'
+                      : autoPlayState === 'paused'
+                        ? 'Pause'
+                        : 'Ready'
+                    }
+                  </div>
+                </>
               )}
             </div>
+
+            {/* Animation Display - Fixed Height */}
+            <div className="flex flex-col items-center h-64 justify-start">
+              <div className="flex items-center justify-center mb-4">
+                {isManualMode ? (
+                  <div
+                    className="cursor-pointer transition-transform hover:scale-105 active:scale-95"
+                    onClick={playManualAnimationWithSound}
+                  >
+                    {renderAnimation('manual', manualLottieRef)}
+                  </div>
+                ) : (
+                  <div>
+                    {renderAnimation('auto', autoLottieRef)}
+                  </div>
+                )}
+              </div>
+
+              {/* Button Area - Fixed Position */}
+              <div className="h-16 flex items-center justify-center">
+                {!isManualMode && (
+                  <button
+                    className={`px-12 py-4 rounded-full font-bold text-lg transition-colors ${animations.auto.loading
+                        ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                        : 'text-white shadow-lg hover:opacity-90'
+                      }`}
+                    style={!animations.auto.loading ? {
+                      backgroundColor: '#684B45'
+                    } : {}}
+                    onClick={
+                      (autoPlayState === 'playing' || autoPlayState === 'prepare')
+                        ? pauseAutoPlaying
+                        : resumeAutoPlaying
+                    }
+                    disabled={animations.auto.loading}
+                  >
+                    <div className="flex items-center">
+                      <span>
+                        {animations.auto.loading
+                          ? '로딩 중...'
+                          : (autoPlayState === 'playing' || autoPlayState === 'prepare')
+                            ? '일시정지'
+                            : autoPlayState === 'paused'
+                              ? '다시재생'
+                              : '자동재생'
+                        }
+                      </span>
+                      {!animations.auto.loading && (
+                        <img
+                          src={(autoPlayState === 'playing' || autoPlayState === 'prepare')
+                            ? getImagePath('images/pause_icon@2x.png')
+                            : getImagePath('images/play_icon@2x.png')
+                          }
+                          srcSet={(autoPlayState === 'playing' || autoPlayState === 'prepare')
+                            ? `${getImagePath('images/pause_icon.png')} 1x, ${getImagePath('images/pause_icon@2x.png')} 2x`
+                            : `${getImagePath('images/play_icon.png')} 1x, ${getImagePath('images/play_icon@2x.png')} 2x`
+                          }
+                          alt={(autoPlayState === 'playing' || autoPlayState === 'prepare') ? '일시정지' : '재생'}
+                          className="w-4 h-4 ml-2"
+                        />
+                      )}
+                    </div>
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
         </div>
 
         {/* Footer */}
@@ -507,7 +540,7 @@ export default function Moktak() {
               className="p-2 rounded-full hover:bg-gray-100 transition-colors"
               title="인스타그램"
             >
-              <img 
+              <img
                 src={getImagePath('images/insta_icon@2x.png')}
                 srcSet={`${getImagePath('images/insta_icon.png')} 1x, ${getImagePath('images/insta_icon@2x.png')} 2x`}
                 alt="인스타그램"
@@ -521,7 +554,7 @@ export default function Moktak() {
               className="p-2 rounded-full hover:bg-gray-100 transition-colors"
               title="네이버 스마트스토어"
             >
-              <img 
+              <img
                 src={getImagePath('images/naver_icon@2x.png')}
                 srcSet={`${getImagePath('images/naver_icon.png')} 1x, ${getImagePath('images/naver_icon@2x.png')} 2x`}
                 alt="네이버 스마트스토어"
