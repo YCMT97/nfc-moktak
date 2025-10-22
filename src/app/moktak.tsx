@@ -438,24 +438,32 @@ export default function Moktak() {
                   }
                   disabled={animations.auto.loading}
                 >
-                  <span className="font-school">
-                    {animations.auto.loading 
-                      ? '로딩 중...' 
-                      : autoPlayState === 'playing'
-                        ? '일시정지' 
-                        : autoPlayState === 'paused'
-                          ? '다시재생'
-                          : '자동재생'
-                    }
-                  </span>
-                  {!animations.auto.loading && (
-                    <span className="ml-1">
-                      {autoPlayState === 'playing'
-                        ? '⏸' 
-                        : '▶'
+                  <div className="flex items-center">
+                    <span>
+                      {animations.auto.loading 
+                        ? '로딩 중...' 
+                        : autoPlayState === 'playing'
+                          ? '일시정지' 
+                          : autoPlayState === 'paused'
+                            ? '다시재생'
+                            : '자동재생'
                       }
                     </span>
-                  )}
+                    {!animations.auto.loading && (
+                      <img 
+                        src={autoPlayState === 'playing' 
+                          ? getImagePath('images/pause_icon@2x.png')
+                          : getImagePath('images/play_icon@2x.png')
+                        }
+                        srcSet={autoPlayState === 'playing'
+                          ? `${getImagePath('images/pause_icon.png')} 1x, ${getImagePath('images/pause_icon@2x.png')} 2x`
+                          : `${getImagePath('images/play_icon.png')} 1x, ${getImagePath('images/play_icon@2x.png')} 2x`
+                        }
+                        alt={autoPlayState === 'playing' ? '일시정지' : '재생'}
+                        className="w-4 h-4 ml-2"
+                      />
+                    )}
+                  </div>
                 </button>
               )}
             </div>
