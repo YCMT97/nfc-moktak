@@ -4,6 +4,7 @@
 'use client'
 
 import React, { useRef, useState, useEffect } from 'react';
+import Image from 'next/image';
 import Lottie, { LottieRefCurrentProps } from 'lottie-react';
 
 type AnimationType = 'launch' | 'manual' | 'auto';
@@ -64,7 +65,8 @@ export default function Moktak() {
     if (autoPlayState === 'prepare') {
       // Lottie 연속 재생: playSegments([0, op], true)로 robust하게 반복
       if (autoLottieRef.current && animations.auto.data) {
-        const op = (animations.auto.data as any).op ?? 60; // fallback 60프레임
+        const data = animations.auto.data as Record<string, unknown>;
+        const op = typeof data.op === 'number' ? data.op : 60;
         autoLottieRef.current.playSegments([0, op], true);
       }
       if (audio) {
@@ -266,10 +268,13 @@ export default function Moktak() {
     if (animationState.loading) {
       return (
         <div className="flex flex-col items-center justify-center space-y-2">
-          <img
+          <Image
             src={getImagePath('images/moktak.png')}
             alt="목탁"
+            width={128}
+            height={128}
             className="object-contain opacity-50"
+            priority
           />
           <p className="text-xs text-gray-500">로딩 중...</p>
         </div>
@@ -279,10 +284,13 @@ export default function Moktak() {
     if (animationState.error) {
       return (
         <div className="flex flex-col items-center justify-center space-y-2 text-center">
-          <img
+          <Image
             src={getImagePath('images/moktak.png')}
             alt="목탁"
+            width={128}
+            height={128}
             className="object-contain"
+            priority
           />
           <p className="text-xs text-red-600">{animationState.error}</p>
         </div>
@@ -293,10 +301,13 @@ export default function Moktak() {
       return (
         <div className="relative flex items-center justify-center">
           {/* 기본 이미지 - 애니메이션이 재생되지 않을 때 표시 */}
-          <img
+          <Image
             src={getImagePath('images/moktak.png')}
             alt="목탁"
+            width={128}
+            height={128}
             className="object-contain absolute opacity-0"
+            priority
           />
           {/* Lottie 애니메이션 - 항상 보이게 */}
           <Lottie
@@ -329,10 +340,13 @@ export default function Moktak() {
 
     return (
       <div className="flex items-center justify-center">
-        <img
+        <Image
           src={getImagePath('images/moktak.png')}
           alt="목탁"
+          width={128}
+          height={128}
           className="object-contain"
+          priority
         />
       </div>
     );
