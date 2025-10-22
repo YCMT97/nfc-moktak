@@ -349,9 +349,10 @@ export default function Moktak() {
               <button
                 className={`py-2 px-6 rounded-full font-semibold text-white transition-all duration-200 ${
                   isManualMode 
-                    ? 'bg-amber-800 shadow-md' 
+                    ? 'shadow-md' 
                     : 'bg-transparent text-gray-700 hover:text-gray-900'
                 }`}
+                style={isManualMode ? { backgroundColor: '#684B45' } : {}}
                 onClick={() => setIsManualMode(true)}
               >
                 수동
@@ -359,9 +360,10 @@ export default function Moktak() {
               <button
                 className={`py-2 px-6 rounded-full font-semibold text-white transition-all duration-200 ${
                   !isManualMode 
-                    ? 'bg-amber-800 shadow-md' 
+                    ? 'shadow-md' 
                     : 'bg-transparent text-gray-700 hover:text-gray-900'
                 }`}
+                style={!isManualMode ? { backgroundColor: '#684B45' } : {}}
                 onClick={() => setIsManualMode(false)}
               >
                 자동
@@ -373,12 +375,12 @@ export default function Moktak() {
           <div className="mb-4 text-center">
             {isManualMode ? (
               <>
-                <h1 className="text-3xl font-bold text-amber-900 mb-2 font-school">목탁! 치기</h1>
-                <div className="text-6xl font-bold text-amber-900">{hitCount}</div>
+                <h1 className="text-3xl font-bold mb-2 font-school" style={{ color: '#684B45' }}>목탁! 치기</h1>
+                <div className="text-6xl font-bold" style={{ color: '#684B45' }}>{hitCount}</div>
               </>
             ) : (
               <>
-                <h1 className="text-2xl font-bold text-amber-900 mb-2 font-school">
+                <h1 className="text-2xl font-bold mb-2 font-school" style={{ color: '#684B45' }}>
                   {autoPlayState === 'playing'
                     ? '마음이 편안해지는 중' 
                     : autoPlayState === 'paused'
@@ -386,7 +388,7 @@ export default function Moktak() {
                       : '울림 자동재생'
                   }
                 </h1>
-                <div className="text-5xl font-bold text-amber-900">
+                <div className="text-5xl font-bold" style={{ color: '#684B45' }}>
                   {autoPlayState === 'playing'
                     ? 'Playing' 
                     : autoPlayState === 'paused'
@@ -422,8 +424,11 @@ export default function Moktak() {
                   className={`px-12 py-4 rounded-full font-bold text-lg transition-colors ${
                     animations.auto.loading 
                       ? 'bg-gray-400 text-gray-200 cursor-not-allowed' 
-                      : 'bg-amber-800 text-white hover:bg-amber-900 shadow-lg'
+                      : 'text-white shadow-lg hover:opacity-90'
                   }`}
+                  style={!animations.auto.loading ? { 
+                    backgroundColor: '#684B45'
+                  } : {}}
                   onClick={
                     autoPlayState === 'playing'
                       ? pauseAutoPlaying 
