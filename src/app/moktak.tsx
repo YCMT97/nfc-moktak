@@ -140,23 +140,29 @@ export default function Moktak() {
   };
 
   // Play sound function for specific type
+
   const playSound = (type: AnimationType) => {
-    if ( type == 'launch') return; // No sound for launch
+    if (type === 'launch') return; // No sound for launch
 
     try {
-      const audioRef = type == 'manual' ? manualAudioRef : autoAudioRef;
-      const audioFile = type == 'manual' ? 'manual_sound.wav' : 'auto_sound.wav';
-      
-      if (!audioRef.current) {
-        audioRef.current = new Audio(getAudioPath(audioFile));
-        console.log('Audio path:', getAudioPath(audioFile));
+      const audioFile = type === 'manual' ? 'manual_sound.wav' : 'auto_sound.wav';
+      if (type === 'manual') {
+        // 수동 모드는 기존 방식 유지 (중복 재생 방지)
+        if (!manualAudioRef.current) {
+          manualAudioRef.current = new Audio(getAudioPath(audioFile));
+        }
+        manualAudioRef.current.currentTime = 0;
+        manualAudioRef.current.play().catch((error: unknown) => {
+          console.warn(`${type} audio play failed:`, error);
+        });
+      } else {
+        // 자동 모드는 매번 새 인스턴스 생성 (겹쳐 재생 허용)
+        const audio = new Audio(getAudioPath(audioFile));
+        audio.load(); // 두 번째부터도 항상 재생되도록 명시적으로 load()
+        audio.play().catch((error: unknown) => {
+          console.warn(`${type} audio play failed:`, error);
+        });
       }
-      
-      audioRef.current.currentTime = 0;
-      audioRef.current.play().catch((error: unknown) => {
-        console.warn(`${type} audio play failed:`, error);
-      });
-      
       setHitCount((c) => c + 1);
     } catch (e) {
       console.warn(`${type} audio error:`, e);
@@ -171,11 +177,27 @@ export default function Moktak() {
     playSound('manual');
   };
 
-  // Auto: Animation + auto sound
+  // Auto: Animation + auto sound (연속 재생 시 오디오 객체를 완전히 제거 후 새로 생성)
   const playAutoAnimationWithSound = () => {
     setAutoPlayState('playing');
     playAnimation('auto');
-    playSound('auto');
+    // 이전 오디오 객체가 있으면 완전히 해제
+    if (autoAudioRef.current) {
+      autoAudioRef.current.pause();
+      autoAudioRef.current.src = '';
+      autoAudioRef.current = null;
+    }
+    // 새 오디오 객체 생성 및 재생
+    const audioFile = 'auto_sound.wav';
+    const audio = new Audio(getAudioPath(audioFile));
+    autoAudioRef.current = audio;
+    audio.load();
+    audio.play().catch((error: unknown) => {
+      console.warn('auto audio play failed:', error);
+    });
+    setHitCount((c) => c + 1);
+    // 오디오가 끝나도 아무 동작하지 않음 (루프 트리거는 Lottie onComplete에서만)
+    audio.onended = null;
   };
 
   // Auto pause function
@@ -252,9 +274,13 @@ export default function Moktak() {
             onComplete={() => {
               // 애니메이션 완료 시 상태를 false로 설정
               setIsAnimationPlaying(prev => ({ ...prev, [type]: false }));
-              // 자동 재생 모드의 auto 애니메이션이 완료되면 자동 재생 상태도 종료
-              if (type === 'auto' && !isManualMode) {
-                setAutoPlayState('ready');
+              // 자동 모드에서는 애니메이션이 끝날 때만 다음 루프 트리거
+              if (type === 'auto') {
+                if (!isManualMode && autoPlayState === 'playing') {
+                  playAutoAnimationWithSound();
+                } else if (isManualMode) {
+                  setAutoPlayState('ready');
+                }
               }
             }}
             style={{ 
