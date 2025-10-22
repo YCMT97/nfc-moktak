@@ -360,7 +360,7 @@ export default function Moktak() {
                 }`}
                 onClick={() => setIsManualMode(true)}
               >
-                <span className="font-school">수동</span>
+                수동
               </button>
               <button
                 className={`py-2 px-6 rounded-full font-semibold text-white transition-all duration-200 ${
@@ -370,7 +370,7 @@ export default function Moktak() {
                 }`}
                 onClick={() => setIsManualMode(false)}
               >
-                <span className="font-school">자동</span>
+                자동
               </button>
             </div>
           </div>
