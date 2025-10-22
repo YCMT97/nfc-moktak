@@ -310,10 +310,14 @@ export default function Moktak() {
         showLaunchAnimation ? 'opacity-0' : 'opacity-100'
       }`}>
         {/* Header with refresh button */}
-        <div className="flex justify-between items-center p-6">
+        <div className="flex justify-between items-center px-6 pt-4 pb-2">
           <div className="flex items-center">
-            <span className="text-2xl mr-2">🪈</span>
-            <span className="text-lg font-school text-amber-900">영천목탁</span>
+            <img 
+              src={getImagePath('images/logo@2x.png')}
+              srcSet={`${getImagePath('images/logo.png')} 1x, ${getImagePath('images/logo@2x.png')} 2x`}
+              alt="영천목탁 로고"
+              className="h-8 w-auto mr-2"
+            />
           </div>
           <button
             onClick={() => {
@@ -327,27 +331,17 @@ export default function Moktak() {
             className="p-2 rounded-full hover:bg-gray-100 transition-colors"
             title="횟수 초기화"
           >
-            <svg 
-              width="24" 
-              height="24" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="2" 
-              strokeLinecap="round" 
-              strokeLinejoin="round"
-              className="text-amber-800"
-            >
-              <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
-              <path d="M21 3v5h-5"/>
-              <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
-              <path d="M3 21v-5h5"/>
-            </svg>
+            <img 
+              src={getImagePath('images/reset_icon@2x.png')}
+              srcSet={`${getImagePath('images/reset_icon.png')} 1x, ${getImagePath('images/reset_icon@2x.png')} 2x`}
+              alt="초기화"
+              className="w-5 h-5"
+            />
           </button>
         </div>
 
         {/* Main content area */}
-        <div className="flex-1 flex flex-col px-6 overflow-hidden">
+        <div className="flex-1 flex flex-col px-6 overflow-hidden pb-20">
         <div className="w-full flex flex-col items-center">
           {/* Toggle Button */}
           <div className="mb-6">
@@ -462,6 +456,40 @@ export default function Moktak() {
             </div>
           </div>
         </div>
+        </div>
+
+        {/* Footer */}
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40">
+          <div className="flex space-x-1">
+            <a
+              href="https://www.instagram.com/moktak_yc/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+              title="인스타그램"
+            >
+              <img 
+                src={getImagePath('images/insta_icon@2x.png')}
+                srcSet={`${getImagePath('images/insta_icon.png')} 1x, ${getImagePath('images/insta_icon@2x.png')} 2x`}
+                alt="인스타그램"
+                className="w-8 h-8"
+              />
+            </a>
+            <a
+              href="https://smartstore.naver.com/ycmoktak"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+              title="네이버 스마트스토어"
+            >
+              <img 
+                src={getImagePath('images/naver_icon@2x.png')}
+                srcSet={`${getImagePath('images/naver_icon.png')} 1x, ${getImagePath('images/naver_icon@2x.png')} 2x`}
+                alt="네이버 스마트스토어"
+                className="w-8 h-8"
+              />
+            </a>
+          </div>
         </div>
       </div>
 
