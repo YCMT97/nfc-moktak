@@ -71,21 +71,24 @@ export default function Moktak() {
       }
       if (audio) {
         audio.currentTime = 0;
+      }
+      // 상태 변경은
+      setAutoPlayState('playing');
+    } else if (autoPlayState === 'playing' && !isManualMode) {
         audio.play().then(() => {
           setHitCount((c: number) => c + 1);
         }).catch((e: unknown) => console.warn('auto audio play failed:', e));
-      }
-      // 상태 변경은 onComplete에서만!
-    } else if (autoPlayState === 'playing' && !isManualMode) {
-      // 유지만 함
-    } else {
+    } else if (autoPlayState === 'paused' || !isManualMode) {
       autoLottieRef.current?.pause();
-      audio.pause();
-      audio.currentTime = 0;
+      if (audio) {
+        audio.pause();
+      }
+      else {
+        console.warn('auto audio is null on pause');
+      }
     }
     return () => {
       audio.pause();
-      audio.currentTime = 0;
     };
   }, [autoPlayState, isManualMode]);
 
@@ -451,12 +454,12 @@ export default function Moktak() {
             <div className="mb-4 text-center">
               {isManualMode ? (
                 <>
-                  <h1 className="text-3xl font-bold mb-2 font-school" style={{ color: '#684B45' }}>목탁! 치기</h1>
+                  <h1 className="text-4xl font-bold mb-2 font-school" style={{ color: '#684B45' }}>목탁! 치기</h1>
                   <div className="text-6xl font-bold" style={{ color: '#684B45' }}>{hitCount}</div>
                 </>
               ) : (
                 <>
-                  <h1 className="text-2xl font-bold mb-2 font-school" style={{ color: '#684B45' }}>
+                  <h1 className="text-4xl font-bold mb-2 font-school" style={{ color: '#684B45' }}>
                     {autoPlayState === 'playing'
                       ? '마음이 편안해지는 중'
                       : autoPlayState === 'paused'
@@ -464,7 +467,7 @@ export default function Moktak() {
                         : '울림 자동재생'
                     }
                   </h1>
-                  <div className="text-5xl font-bold" style={{ color: '#684B45' }}>
+                  <div className="text-4xl font-bold" style={{ color: '#684B45' }}>
                     {(autoPlayState === 'playing' || autoPlayState === 'prepare')
                       ? 'Playing'
                       : autoPlayState === 'paused'
