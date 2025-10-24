@@ -16,7 +16,13 @@ interface AnimationState {
   error: string | null;
 }
 
-type AutoPlayState = 'ready' | 'playing' | 'paused' | 'prepare';
+
+enum AutoPlayState {
+  ready = 'ready',
+  playing = 'playing',
+  paused = 'paused',
+  preparing = 'preparing',
+}
 
 const getAudioPath = (filename: string) => {
   if (typeof window !== 'undefined') {
@@ -31,7 +37,7 @@ export default function Moktak() {
   const [showLaunchAnimation, setShowLaunchAnimation] = useState<boolean>(true)
   const [hasShownLaunchAnimation, setHasShownLaunchAnimation] = useState<boolean>(false)
   const [isManualMode, setIsManualMode] = useState<boolean>(true) // true: 수동, false: 자동
-  const [autoPlayState, setAutoPlayState] = useState<AutoPlayState>('ready') // 자동 모드 상태
+  const [autoPlayState, setAutoPlayState] = useState<AutoPlayState>(AutoPlayState.ready) // 자동 모드 상태
   const [showToast, setShowToast] = useState<boolean>(false) // 토스트 표시 여부
   const [toastMessage, setToastMessage] = useState<string>('') // 토스트 메시지
   const [isAnimationPlaying, setIsAnimationPlaying] = useState<Record<AnimationType, boolean>>({
@@ -62,7 +68,7 @@ export default function Moktak() {
       autoAudioRef.current = new Audio(getAudioPath('auto_sound.wav'));
     }
     const audio = autoAudioRef.current;
-    if (autoPlayState === 'prepare') {
+  if (autoPlayState === AutoPlayState.preparing) {
       // Lottie 연속 재생: playSegments([0, op], true)로 robust하게 반복
       if (autoLottieRef.current && animations.auto.data) {
         const data = animations.auto.data as Record<string, unknown>;
@@ -73,12 +79,12 @@ export default function Moktak() {
         audio.currentTime = 0;
       }
       // 상태 변경은
-      setAutoPlayState('playing');
-    } else if (autoPlayState === 'playing' && !isManualMode) {
+  setAutoPlayState(AutoPlayState.playing);
+  } else if (autoPlayState === AutoPlayState.playing && !isManualMode) {
         audio.play().then(() => {
           setHitCount((c: number) => c + 1);
         }).catch((e: unknown) => console.warn('auto audio play failed:', e));
-    } else if (autoPlayState === 'paused' || !isManualMode) {
+  } else if (autoPlayState === AutoPlayState.paused || !isManualMode) {
       autoLottieRef.current?.pause();
       if (audio) {
         audio.pause();
@@ -240,7 +246,7 @@ export default function Moktak() {
 
   // Auto pause function
   const pauseAutoPlaying = () => {
-    setAutoPlayState('paused');
+  setAutoPlayState(AutoPlayState.paused);
     // 오디오 완전 정지 및 해제
     if (autoAudioRef.current) {
       autoAudioRef.current.pause();
@@ -256,7 +262,7 @@ export default function Moktak() {
 
   // Resume auto playing
   const resumeAutoPlaying = () => {
-    setAutoPlayState('playing');
+  setAutoPlayState(AutoPlayState.playing);
     playAnimation('auto');
     playSound('auto');
   };
@@ -322,13 +328,13 @@ export default function Moktak() {
               setIsAnimationPlaying(prev => ({ ...prev, [type]: false }));
               if (type === 'auto') {
                 if (!isManualModeRef.current) {
-                  setAutoPlayState('playing');
-                  setTimeout(() => setAutoPlayState('prepare'), 10);
+                  setAutoPlayState(AutoPlayState.playing);
+                  setTimeout(() => setAutoPlayState(AutoPlayState.preparing), 10);
                 } else {
-                  setAutoPlayState('ready');
+                  setAutoPlayState(AutoPlayState.ready);
                 }
               } else {
-                setAutoPlayState('ready');
+                setAutoPlayState(AutoPlayState.ready);
               }
               console.log('onComplete called for', type);
             }}
@@ -357,10 +363,6 @@ export default function Moktak() {
 
   return (
     <div className="h-screen bg-gradient-to-b from-white to-slate-50 relative overflow-hidden">
-      {/* DEBUG: autoPlayState 값 표시 */}
-      <div style={{ position: 'fixed', top: 8, right: 16, zIndex: 9999, background: 'rgba(0,0,0,0.08)', color: '#684B45', fontSize: 14, padding: '2px 8px', borderRadius: 6 }}>
-        <b>autoPlayState:</b> {autoPlayState}
-      </div>
       {/* Launch Animation Overlay */}
       {showLaunchAnimation && animations.launch.data && !animations.launch.error && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-white">
@@ -460,17 +462,17 @@ export default function Moktak() {
               ) : (
                 <>
                   <h1 className="text-4xl font-bold mb-2 font-school" style={{ color: '#684B45' }}>
-                    {autoPlayState === 'playing'
+                    {autoPlayState === AutoPlayState.playing
                       ? '마음이 편안해지는 중'
-                      : autoPlayState === 'paused'
+                      : autoPlayState === AutoPlayState.paused
                         ? '명상중... 방해금지'
                         : '울림 자동재생'
                     }
                   </h1>
                   <div className="text-4xl font-bold" style={{ color: '#684B45' }}>
-                    {(autoPlayState === 'playing' || autoPlayState === 'prepare')
+                    {(autoPlayState === AutoPlayState.playing || autoPlayState === AutoPlayState.preparing)
                       ? 'Playing'
-                      : autoPlayState === 'paused'
+                      : autoPlayState === AutoPlayState.paused
                         ? 'Pause'
                         : 'Ready'
                     }
@@ -508,7 +510,7 @@ export default function Moktak() {
                       backgroundColor: '#684B45'
                     } : {}}
                     onClick={
-                      (autoPlayState === 'playing' || autoPlayState === 'prepare')
+                      (autoPlayState === AutoPlayState.playing || autoPlayState === AutoPlayState.preparing)
                         ? pauseAutoPlaying
                         : resumeAutoPlaying
                     }
@@ -518,24 +520,24 @@ export default function Moktak() {
                       <span>
                         {animations.auto.loading
                           ? '로딩 중...'
-                          : (autoPlayState === 'playing' || autoPlayState === 'prepare')
+                          : (autoPlayState === AutoPlayState.playing || autoPlayState === AutoPlayState.preparing)
                             ? '일시정지'
-                            : autoPlayState === 'paused'
+                            : autoPlayState === AutoPlayState.paused
                               ? '다시재생'
                               : '자동재생'
                         }
                       </span>
                       {!animations.auto.loading && (
                         <img
-                          src={(autoPlayState === 'playing' || autoPlayState === 'prepare')
+                          src={(autoPlayState === AutoPlayState.playing || autoPlayState === AutoPlayState.preparing)
                             ? getImagePath('images/pause_icon@2x.png')
                             : getImagePath('images/play_icon@2x.png')
                           }
-                          srcSet={(autoPlayState === 'playing' || autoPlayState === 'prepare')
+                          srcSet={(autoPlayState === AutoPlayState.playing || autoPlayState === AutoPlayState.preparing)
                             ? `${getImagePath('images/pause_icon.png')} 1x, ${getImagePath('images/pause_icon@2x.png')} 2x`
                             : `${getImagePath('images/play_icon.png')} 1x, ${getImagePath('images/play_icon@2x.png')} 2x`
                           }
-                          alt={(autoPlayState === 'playing' || autoPlayState === 'prepare') ? '일시정지' : '재생'}
+                          alt={(autoPlayState === AutoPlayState.playing || autoPlayState === AutoPlayState.preparing) ? '일시정지' : '재생'}
                           className="w-4 h-4 ml-2"
                         />
                       )}
