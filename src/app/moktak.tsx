@@ -308,13 +308,13 @@ export default function Moktak() {
         </div>
 
         {/* Main content area */}
-        <div className="flex-1 flex flex-col px-4 overflow-hidden pb-20">
+        <div className="flex-1 flex flex-col px-4 overflow-auto pb-32"> {/* pb-32로 하단 여백 충분히 확보 */}
           <div className="w-full flex flex-col items-center">
             {/* Toggle Button */}
             <div className="mb-6">
               <div className="flex rounded-[8px] overflow-hidden shadow-sm" style={{ width: 144, height: 40, background: '#E1DBDA' }}>
                 <button
-                  className={`flex-1 h-full font-bold text-lg transition-all duration-200 ${isManualMode
+                  className={`flex-1 h-full font-bold text-base transition-all duration-200 ${isManualMode
                     ? 'bg-[#684B45] text-white'
                     : 'bg-[#E1DBDA] text-[#684B45]'
                     }`}
@@ -331,7 +331,7 @@ export default function Moktak() {
                   수동
                 </button>
                 <button
-                  className={`flex-1 h-full font-bold text-lg transition-all duration-200 ${!isManualMode
+                  className={`flex-1 h-full font-bold text-base transition-all duration-200 ${!isManualMode
                     ? 'bg-[#684B45] text-white'
                     : 'bg-[#E1DBDA] text-[#684B45]'
                     }`}
