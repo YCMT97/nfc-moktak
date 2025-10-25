@@ -7,15 +7,18 @@ import React, { useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
 import Lottie, { LottieRefCurrentProps } from 'lottie-react';
 
-type AnimationType = 'launch' | 'manual' | 'auto';
 
+enum AnimationType {
+  launch = 'launch',
+  manual = 'manual',
+  auto = 'auto',
+}
 
 interface AnimationState {
   data: object | null;
   loading: boolean;
   error: string | null;
 }
-
 
 enum AutoPlayState {
   ready = 'ready',
@@ -41,9 +44,9 @@ export default function Moktak() {
   const [showToast, setShowToast] = useState<boolean>(false) // 토스트 표시 여부
   const [toastMessage, setToastMessage] = useState<string>('') // 토스트 메시지
   const [isAnimationPlaying, setIsAnimationPlaying] = useState<Record<AnimationType, boolean>>({
-    launch: false,
-    manual: false,
-    auto: false
+    [AnimationType.launch]: false,
+    [AnimationType.manual]: false,
+    [AnimationType.auto]: false
   })
   const manualAudioRef = useRef<HTMLAudioElement | null>(null)
   const autoAudioRef = useRef<HTMLAudioElement | null>(null)
@@ -100,9 +103,9 @@ export default function Moktak() {
 
 
   const [animations, setAnimations] = useState<Record<AnimationType, AnimationState>>({
-    launch: { data: null, loading: true, error: null },
-    manual: { data: null, loading: true, error: null },
-    auto: { data: null, loading: true, error: null }
+    [AnimationType.launch]: { data: null, loading: true, error: null },
+    [AnimationType.manual]: { data: null, loading: true, error: null },
+    [AnimationType.auto]: { data: null, loading: true, error: null }
   });
 
   // 오디오 경로 반환 함수 (useEffect 위로 이동)
@@ -112,12 +115,12 @@ export default function Moktak() {
     const loadAnimations = async () => {
       const basePath = typeof window !== 'undefined' && window.location.pathname.startsWith('/nfc-moktak') ? '/nfc-moktak' : '';
       const animationFiles = {
-        launch: 'launch_ani.json',
-        manual: 'manual_ani.json',
-        auto: 'auto_ani.json'
+        [AnimationType.launch]: 'launch_ani.json',
+        [AnimationType.manual]: 'manual_ani.json',
+        [AnimationType.auto]: 'auto_ani.json'
       };
 
-      for (const [type, filename] of Object.entries(animationFiles)) {
+  for (const [type, filename] of Object.entries(animationFiles)) {
         try {
           const response = await fetch(`${basePath}/${filename}`);
 
@@ -128,13 +131,13 @@ export default function Moktak() {
           const data = await response.json();
           setAnimations((prev: Record<AnimationType, AnimationState>) => ({
             ...prev,
-            [type]: { data, loading: false, error: null }
+            [type as AnimationType]: { data, loading: false, error: null }
           }));
         } catch (error) {
           console.error(`Failed to load ${filename}:`, error);
           setAnimations((prev: Record<AnimationType, AnimationState>) => ({
             ...prev,
-            [type]: {
+            [type as AnimationType]: {
               data: null,
               loading: false,
               error: error instanceof Error ? error.message : `${filename} 로드에 실패했습니다`
@@ -182,9 +185,9 @@ export default function Moktak() {
   // Play animation function
   const playAnimation = (type: AnimationType) => {
     const refs = {
-      launch: launchLottieRef,
-      manual: manualLottieRef,
-      auto: autoLottieRef
+      [AnimationType.launch]: launchLottieRef,
+      [AnimationType.manual]: manualLottieRef,
+      [AnimationType.auto]: autoLottieRef
     };
 
     const ref = refs[type];
@@ -208,11 +211,11 @@ export default function Moktak() {
   // Play sound function for specific type
 
   const playSound = (type: AnimationType) => {
-    if (type === 'launch') return; // No sound for launch
+  if (type === AnimationType.launch) return; // No sound for launch
 
     try {
-      const audioFile = type === 'manual' ? 'manual_sound.wav' : 'auto_sound.wav';
-      if (type === 'manual') {
+  const audioFile = type === AnimationType.manual ? 'manual_sound.wav' : 'auto_sound.wav';
+  if (type === AnimationType.manual) {
         // 수동 모드는 기존 방식 유지 (중복 재생 방지)
         if (!manualAudioRef.current) {
           manualAudioRef.current = new Audio(getAudioPath(audioFile));
@@ -239,8 +242,8 @@ export default function Moktak() {
 
   // Manual: Animation + manual sound
   const playManualAnimationWithSound = () => {
-    playAnimation('manual');
-    playSound('manual');
+    playAnimation(AnimationType.manual);
+    playSound(AnimationType.manual);
   };
 
 
@@ -263,8 +266,8 @@ export default function Moktak() {
   // Resume auto playing
   const resumeAutoPlaying = () => {
     setAutoPlayState(AutoPlayState.playing);
-    playAnimation('auto');
-    playSound('auto');
+  playAnimation(AnimationType.auto);
+  playSound(AnimationType.auto);
   };
 
   // Check if any animation is still loading
@@ -401,23 +404,23 @@ export default function Moktak() {
           <div className="w-full flex flex-col items-center">
             {/* Toggle Button */}
             <div className="mb-6">
-              <div className="flex bg-gray-300 rounded-full p-1 shadow-sm">
+              <div className="flex rounded-[8px] overflow-hidden shadow-sm" style={{ width: 180, height: 56, background: '#E1DBDA' }}>
                 <button
-                  className={`py-2 px-6 rounded-full font-semibold text-white transition-all duration-200 ${isManualMode
-                    ? 'shadow-md'
-                    : 'bg-transparent text-gray-700 hover:text-gray-900'
-                    }`}
-                  style={isManualMode ? { backgroundColor: '#684B45' } : {}}
+                  className={`flex-1 h-full font-bold text-lg transition-all duration-200 ${isManualMode
+                    ? 'bg-[#684B45] text-white'
+                    : 'bg-[#E1DBDA] text-[#684B45]'
+                  }`}
+                  style={{ borderRadius: '8px' }}
                   onClick={() => setIsManualMode(true)}
                 >
                   수동
                 </button>
                 <button
-                  className={`py-2 px-6 rounded-full font-semibold text-white transition-all duration-200 ${!isManualMode
-                    ? 'shadow-md'
-                    : 'bg-transparent text-gray-700 hover:text-gray-900'
-                    }`}
-                  style={!isManualMode ? { backgroundColor: '#684B45' } : {}}
+                  className={`flex-1 h-full font-bold text-lg transition-all duration-200 ${!isManualMode
+                    ? 'bg-[#684B45] text-white'
+                    : 'bg-[#E1DBDA] text-[#684B45]'
+                  }`}
+                  style={{ borderRadius: '8px' }}
                   onClick={() => setIsManualMode(false)}
                 >
                   자동
@@ -482,11 +485,11 @@ export default function Moktak() {
                       className="cursor-pointer transition-transform hover:scale-105 active:scale-95"
                       onClick={playManualAnimationWithSound}
                     >
-                      {renderAnimation('manual', manualLottieRef)}
+                      {renderAnimation(AnimationType.manual, manualLottieRef)}
                     </div>
                   ) : (
                     <div>
-                      {renderAnimation('auto', autoLottieRef)}
+                      {renderAnimation(AnimationType.auto, autoLottieRef)}
                     </div>
                   )
                 }
