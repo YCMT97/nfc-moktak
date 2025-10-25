@@ -24,7 +24,6 @@ enum AutoPlayState {
   ready = 'ready',
   playing = 'playing',
   paused = 'paused',
-  preparing = 'preparing',
 }
 
 const getAudioPath = (filename: string) => {
@@ -71,7 +70,7 @@ export default function Moktak() {
       autoAudioRef.current = new Audio(getAudioPath('auto_sound.wav'));
     }
     const audio = autoAudioRef.current;
-    if (autoPlayState === AutoPlayState.preparing) {
+    if (autoPlayState === AutoPlayState.ready) {
       // Lottie 연속 재생: playSegments([0, op], true)로 robust하게 반복
       if (autoLottieRef.current && animations.auto.data) {
         const data = animations.auto.data as Record<string, unknown>;
@@ -120,7 +119,7 @@ export default function Moktak() {
         [AnimationType.auto]: 'auto_ani.json'
       };
 
-  for (const [type, filename] of Object.entries(animationFiles)) {
+      for (const [type, filename] of Object.entries(animationFiles)) {
         try {
           const response = await fetch(`${basePath}/${filename}`);
 
@@ -211,11 +210,11 @@ export default function Moktak() {
   // Play sound function for specific type
 
   const playSound = (type: AnimationType) => {
-  if (type === AnimationType.launch) return; // No sound for launch
+    if (type === AnimationType.launch) return; // No sound for launch
 
     try {
-  const audioFile = type === AnimationType.manual ? 'manual_sound.wav' : 'auto_sound.wav';
-  if (type === AnimationType.manual) {
+      const audioFile = type === AnimationType.manual ? 'manual_sound.wav' : 'auto_sound.wav';
+      if (type === AnimationType.manual) {
         // 수동 모드는 기존 방식 유지 (중복 재생 방지)
         if (!manualAudioRef.current) {
           manualAudioRef.current = new Audio(getAudioPath(audioFile));
@@ -266,8 +265,8 @@ export default function Moktak() {
   // Resume auto playing
   const resumeAutoPlaying = () => {
     setAutoPlayState(AutoPlayState.playing);
-  playAnimation(AnimationType.auto);
-  playSound(AnimationType.auto);
+    playAnimation(AnimationType.auto);
+    playSound(AnimationType.auto);
   };
 
   // Check if any animation is still loading
@@ -332,7 +331,7 @@ export default function Moktak() {
               if (type === 'auto') {
                 if (!isManualModeRef.current) {
                   setAutoPlayState(AutoPlayState.playing);
-                  setTimeout(() => setAutoPlayState(AutoPlayState.preparing), 10);
+                  setTimeout(() => setAutoPlayState(AutoPlayState.ready), 10);
                 } else {
                   setAutoPlayState(AutoPlayState.ready);
                 }
@@ -409,7 +408,7 @@ export default function Moktak() {
                   className={`flex-1 h-full font-bold text-lg transition-all duration-200 ${isManualMode
                     ? 'bg-[#684B45] text-white'
                     : 'bg-[#E1DBDA] text-[#684B45]'
-                  }`}
+                    }`}
                   style={{ borderRadius: '8px' }}
                   onClick={() => setIsManualMode(true)}
                 >
@@ -419,7 +418,7 @@ export default function Moktak() {
                   className={`flex-1 h-full font-bold text-lg transition-all duration-200 ${!isManualMode
                     ? 'bg-[#684B45] text-white'
                     : 'bg-[#E1DBDA] text-[#684B45]'
-                  }`}
+                    }`}
                   style={{ borderRadius: '8px' }}
                   onClick={() => setIsManualMode(false)}
                 >
@@ -446,7 +445,7 @@ export default function Moktak() {
                     }
                   </h1>
                   <div className="text-4xl font-bold" style={{ color: '#684B45' }}>
-                    {(autoPlayState === AutoPlayState.playing || autoPlayState === AutoPlayState.preparing)
+                    {autoPlayState === AutoPlayState.playing
                       ? 'Playing'
                       : autoPlayState === AutoPlayState.paused
                         ? 'Pause'
@@ -507,7 +506,7 @@ export default function Moktak() {
                       backgroundColor: '#684B45'
                     } : {}}
                     onClick={
-                      (autoPlayState === AutoPlayState.playing || autoPlayState === AutoPlayState.preparing)
+                      autoPlayState === AutoPlayState.playing
                         ? pauseAutoPlaying
                         : resumeAutoPlaying
                     }
@@ -517,7 +516,7 @@ export default function Moktak() {
                       <span>
                         {animations.auto.loading
                           ? '로딩 중...'
-                          : (autoPlayState === AutoPlayState.playing || autoPlayState === AutoPlayState.preparing)
+                          : autoPlayState === AutoPlayState.playing
                             ? '일시정지'
                             : autoPlayState === AutoPlayState.paused
                               ? '다시재생'
@@ -526,15 +525,15 @@ export default function Moktak() {
                       </span>
                       {!animations.auto.loading && (
                         <img
-                          src={(autoPlayState === AutoPlayState.playing || autoPlayState === AutoPlayState.preparing)
+                          src={autoPlayState === AutoPlayState.playing
                             ? getImagePath('images/pause_icon@2x.png')
                             : getImagePath('images/play_icon@2x.png')
                           }
-                          srcSet={(autoPlayState === AutoPlayState.playing || autoPlayState === AutoPlayState.preparing)
+                          srcSet={autoPlayState === AutoPlayState.playing
                             ? `${getImagePath('images/pause_icon.png')} 1x, ${getImagePath('images/pause_icon@2x.png')} 2x`
                             : `${getImagePath('images/play_icon.png')} 1x, ${getImagePath('images/play_icon@2x.png')} 2x`
                           }
-                          alt={(autoPlayState === AutoPlayState.playing || autoPlayState === AutoPlayState.preparing) ? '일시정지' : '재생'}
+                          alt={autoPlayState === AutoPlayState.playing ? '일시정지' : '재생'}
                           className="w-4 h-4 ml-2"
                         />
                       )}
