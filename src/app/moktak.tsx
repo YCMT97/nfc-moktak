@@ -312,7 +312,7 @@ export default function Moktak() {
           <div className="w-full flex flex-col items-center">
             {/* Toggle Button */}
             <div className="mb-6">
-              <div className="flex rounded-[8px] overflow-hidden shadow-sm" style={{ width: 180, height: 56, background: '#E1DBDA' }}>
+              <div className="flex rounded-[8px] overflow-hidden shadow-sm" style={{ width: 144, height: 40, background: '#E1DBDA' }}>
                 <button
                   className={`flex-1 h-full font-bold text-lg transition-all duration-200 ${isManualMode
                     ? 'bg-[#684B45] text-white'
@@ -415,11 +415,13 @@ export default function Moktak() {
               <div className="h-16 flex items-center justify-center">
                 {!isManualMode && (
                   <button
-                    className={`px-12 py-4 rounded-full font-bold text-lg transition-colors ${animations.auto.loading
+                    className={`font-bold text-lg transition-colors ${animations.auto.loading
                       ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
                       : 'text-white shadow-lg hover:opacity-90'
                       }`}
                     style={{
+                      width: 144,
+                      height: 48,
                       borderRadius: 8,
                       ...(animations.auto.loading ? {} : { backgroundColor: '#684B45' })
                     }}
@@ -430,7 +432,7 @@ export default function Moktak() {
                     }
                     disabled={animations.auto.loading}
                   >
-                    <div className="flex items-center">
+                    <div className="flex items-center justify-center w-full h-full">
                       <span>
                         {animations.auto.loading
                           ? '로딩 중...'
@@ -500,8 +502,8 @@ export default function Moktak() {
 
       {/* Toast Message */}
       {showToast && (
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
-          <div className="bg-gray-200 text-gray-800 px-6 py-4 rounded-2xl shadow-lg animate-fade-in">
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 w-[80vw] max-w-[600px]">
+          <div className="px-6 py-4 rounded-2xl shadow-lg animate-fade-in w-full text-center" style={{ backgroundColor: '#E1DBDA', color: '#684B45' }}>
             <span className="text-base">{toastMessage}</span>
           </div>
         </div>
