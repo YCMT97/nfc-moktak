@@ -157,9 +157,7 @@ export default function Moktak() {
 
   // 최신 상태 추적용 ref
   const playStateRef = useRef(playState);
-  const isManualModeRef = useRef(isManualMode);
   useEffect(() => { playStateRef.current = playState; }, [playState]);
-  useEffect(() => { isManualModeRef.current = isManualMode; }, [isManualMode]);
 
   const [animations, setAnimations] = useState<Record<AnimationType, AnimationState>>({
     [AnimationType.launch]: { data: null, loading: true, error: null },
@@ -292,9 +290,10 @@ export default function Moktak() {
               if (hitCount > 0) {
                 setToastMessage(`${hitCount}번째 울림을 마쳤습니다.`);
                 setShowToast(true);
-                setTimeout(() => setShowToast(false), 3000);
+                setTimeout(() => setShowToast(false), 3000);                
+                setHitCount(0);
               }
-              setHitCount(0);
+              setPlayState(PlayState.ready);
             }}
             className="p-2 rounded-full hover:bg-gray-100 transition-colors"
             title="횟수 초기화"
@@ -348,22 +347,21 @@ export default function Moktak() {
             </div>
 
             {/* Message and Count */}
-            <div className="mb-4 text-center">
+            <div className="mb-4 text-center">              
+              <h1 className="text-4xl font-bold mb-2 font-school" style={{ color: '#684B45' }}>
+                {
+                  playState === PlayState.ready && isManualMode ? '목 탁! 치기' :
+                  playState === PlayState.ready && !isManualMode ? '울림 자동재생' :
+                  playState === PlayState.playing ? '마음이 편안해지는 중'
+                  : '명상중.. 방해금지'
+                }
+              </h1>
               {isManualMode ? (
                 <>
-                  <h1 className="text-4xl font-bold mb-2 font-school" style={{ color: '#684B45' }}>목탁! 치기</h1>
                   <div className="text-6xl font-bold" style={{ color: '#684B45' }}>{hitCount}</div>
                 </>
               ) : (
                 <>
-                  <h1 className="text-4xl font-bold mb-2 font-school" style={{ color: '#684B45' }}>
-                    {playState === PlayState.playing
-                      ? '마음이 편안해지는 중'
-                      : playState === PlayState.paused
-                        ? '명상중... 방해금지'
-                        : '울림 자동재생'
-                    }
-                  </h1>
                   <div className="text-4xl font-bold" style={{ color: '#684B45' }}>
                     {(playState === PlayState.playing || playState === PlayState.preparing)
                       ? 'Playing'
