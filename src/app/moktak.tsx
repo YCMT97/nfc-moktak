@@ -114,17 +114,10 @@ export default function Moktak() {
             autoplay={false}
             loop={false}
             onComplete={() => {
-              setIsAnimationPlaying(prev => ({ ...prev, [type]: false }));
-              if (isManualModeRef.current && type === AnimationType.manual) {
-                setPlayState(PlayState.ready);
-              } else if (type === AnimationType.auto) {
-                if (!isManualModeRef.current) {
-                  setPlayState(PlayState.playing);
-                  setTimeout(() => setPlayState(PlayState.ready), 10);
-                } else {
-                  setPlayState(PlayState.ready);
-                }
-              } else {
+              if ( type === AnimationType.auto ) {
+                setPlayState(PlayState.preparing)                
+              }
+              else {
                 setPlayState(PlayState.ready);
               }
               console.log('onComplete called for', type);
@@ -158,16 +151,9 @@ export default function Moktak() {
   const [playState, setPlayState] = useState<PlayState>(PlayState.ready) // 재생 상태
   const [showToast, setShowToast] = useState<boolean>(false) // 토스트 표시 여부
   const [toastMessage, setToastMessage] = useState<string>('') // 토스트 메시지
-  const [isAnimationPlaying, setIsAnimationPlaying] = useState<Record<AnimationType, boolean>>({
-    [AnimationType.launch]: false,
-    [AnimationType.manual]: false,
-    [AnimationType.auto]: false
-  })
-  const manualAudioRef = useRef<HTMLAudioElement | null>(null)
-  const autoAudioRef = useRef<HTMLAudioElement | null>(null)
+  const activeAudioRef = useRef<HTMLAudioElement | null>(null)
   const launchLottieRef = useRef<LottieRefCurrentProps>(null)
-  const manualLottieRef = useRef<LottieRefCurrentProps>(null)
-  const autoLottieRef = useRef<LottieRefCurrentProps>(null)
+  const activeLottieRef = useRef<LottieRefCurrentProps>(null)
 
   // 최신 상태 추적용 ref
   const playStateRef = useRef(playState);
@@ -226,7 +212,6 @@ export default function Moktak() {
     if (animations.launch.data && !animations.launch.loading && !animations.launch.error && launchLottieRef.current) {
       // 약간의 지연 후 애니메이션 시작
       const timer = setTimeout(() => {
-        setIsAnimationPlaying((prev: Record<AnimationType, boolean>) => ({ ...prev, launch: true }));
         launchLottieRef.current?.play();
       }, 500);
       return () => clearTimeout(timer);
@@ -235,70 +220,57 @@ export default function Moktak() {
 
   // Centralized playback/animation control
   useEffect(() => {
-    // Manual mode: play manual animation/sound when state is playing
-    if (isManualMode) {
-      if (playState === PlayState.playing) {
-        // Play manual animation
-        if (manualLottieRef.current && animations.manual.data && !animations.manual.error) {
-          manualLottieRef.current.stop();
-          manualLottieRef.current.play();
-          setIsAnimationPlaying((prev) => ({ ...prev, manual: true }));
+    if (playState === PlayState.ready) {
+      // 오디오 객체 미리 준비 및 초기화
+      if (isManualMode) {
+        if (!activeAudioRef.current || activeAudioRef.current.src !== getAudioPath('manual_sound.wav')) {
+          activeAudioRef.current = new window.Audio(getAudioPath('manual_sound.wav'));
         }
-        // Play manual sound
-        if (!manualAudioRef.current) {
-          manualAudioRef.current = new window.Audio(getAudioPath('manual_sound.wav'));
+      } else {
+        if (!activeAudioRef.current || activeAudioRef.current.src !== getAudioPath('auto_sound.wav')) {
+          activeAudioRef.current = new window.Audio(getAudioPath('auto_sound.wav'));
         }
-        manualAudioRef.current.currentTime = 0;
-        manualAudioRef.current.play().catch((error: unknown) => {
-          console.warn('manual audio play failed:', error);
-        });
-        setHitCount((c: number) => c + 1);
-  } else if (playState === PlayState.ready) {
-        // Stop manual animation/sound
-        if (manualLottieRef.current) manualLottieRef.current.pause();
-        if (manualAudioRef.current) {
-          manualAudioRef.current.pause();
-          manualAudioRef.current.currentTime = 0;
-          manualAudioRef.current.load();
-        }
-        setIsAnimationPlaying((prev) => ({ ...prev, manual: false }));
       }
-    } else {
-      // Auto mode
-      if (!autoAudioRef.current) {
-        autoAudioRef.current = new window.Audio(getAudioPath('auto_sound.wav'));
+      if (activeAudioRef.current) {
+        activeAudioRef.current.pause();
+        activeAudioRef.current.currentTime = 0;
+        activeAudioRef.current.load();
       }
-      const audio = autoAudioRef.current;
-      if (playState === PlayState.ready) {
-        // ready 상태에서는 오디오 완전 정지 및 초기화
-        if (audio) {
-          audio.pause();
-          audio.currentTime = 0;
-          audio.load();
-        }
-        // 애니메이션도 정지
-        if (autoLottieRef.current) autoLottieRef.current.pause();
-        setIsAnimationPlaying((prev) => ({ ...prev, auto: false }));
-  } else if (playState === PlayState.playing) {
-        // Play auto animation
-        if (autoLottieRef.current && animations.auto.data && !animations.auto.error) {
-          autoLottieRef.current.stop();
-          autoLottieRef.current.play();
-          setIsAnimationPlaying((prev) => ({ ...prev, auto: true }));
-        }
-        // Play auto sound
-        audio.currentTime = 0;
-        audio.play().then(() => {
-          setHitCount((c: number) => c + 1);
-        }).catch((e: unknown) => console.warn('auto audio play failed:', e));
-  } else if (playState === PlayState.paused) {
-        // Pause auto animation/sound
-        if (autoLottieRef.current) autoLottieRef.current.pause();
-        if (audio) audio.pause();
-        setIsAnimationPlaying((prev) => ({ ...prev, auto: false }));
+      if (activeLottieRef.current) {
+        activeLottieRef.current.stop();
       }
+    } else if (playState === PlayState.playing) {
+      // 오디오/애니메이션 재생 (오디오 객체는 이미 준비됨)
+      const soundPath = isManualMode ? getAudioPath('manual_sound.wav') : getAudioPath('auto_sound.wav');
+      const animationData = isManualMode ? animations.manual.data : animations.auto.data;
+      const animationError = isManualMode ? animations.manual.error : animations.auto.error;
+      // 오디오 재생
+      if (activeAudioRef.current) {
+        activeAudioRef.current.currentTime = 0;
+        activeAudioRef.current.play().then(() => {
+          if (isManualMode) setHitCount((c: number) => c + 1);
+        }).catch((e: unknown) => console.warn('audio play failed:', e));
+      }
+      // 애니메이션 재생
+      if (activeLottieRef.current && animationData && !animationError) {
+        activeLottieRef.current.stop();
+        activeLottieRef.current.play();
+      }
+    } else if (playState === PlayState.paused) {
+      // 오디오/애니메이션 일시정지
+      if (activeAudioRef.current) {
+        activeAudioRef.current.pause();
+      }
+      if (activeLottieRef.current) {
+        activeLottieRef.current.pause();
+      }
+    } else if (playState === PlayState.preparing) {
+      // 자동 모드로, 다시 반복 재생하기
+      const timer = setTimeout(() => {
+        setPlayState(PlayState.playing);
+      }, 10);
+      return () => clearTimeout(timer);
     }
-    // No cleanup needed
   }, [playState, isManualMode, animations.manual.data, animations.manual.error, animations.auto.data, animations.auto.error]);
 
   return (
@@ -351,9 +323,9 @@ export default function Moktak() {
                   onClick={() => {
                     setIsManualMode(true);
                     setPlayState(PlayState.ready);
-                    // 자동 사운드 즉시 중지
-                    if (autoAudioRef.current) {
-                      autoAudioRef.current.pause();
+                    // 사운드 즉시 중지
+                    if (activeAudioRef.current) {
+                      activeAudioRef.current.pause();
                     }
                   }}
                 >
@@ -415,7 +387,6 @@ export default function Moktak() {
                     loop={false}
                     onComplete={() => {
                       // Launch 애니메이션 완료 상태 설정
-                      setIsAnimationPlaying(prev => ({ ...prev, launch: false }));
                       // 애니메이션 완료 후 1초 뒤에 사라지기
                       setTimeout(() => {
                         setShowLaunchAnimation(false);
@@ -432,11 +403,11 @@ export default function Moktak() {
                       className="cursor-pointer transition-transform hover:scale-105 active:scale-95"
                       onClick={playManualAnimationWithSound}
                     >
-                      {renderAnimation(AnimationType.manual, manualLottieRef)}
+                      {renderAnimation(AnimationType.manual, activeLottieRef)}
                     </div>
                   ) : (
                     <div>
-                      {renderAnimation(AnimationType.auto, autoLottieRef)}
+                      {renderAnimation(AnimationType.auto, activeLottieRef)}
                     </div>
                   )
                 }
