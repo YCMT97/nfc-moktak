@@ -68,7 +68,7 @@ export default function Moktak() {
       autoAudioRef.current = new Audio(getAudioPath('auto_sound.wav'));
     }
     const audio = autoAudioRef.current;
-  if (autoPlayState === AutoPlayState.preparing) {
+    if (autoPlayState === AutoPlayState.preparing) {
       // Lottie 연속 재생: playSegments([0, op], true)로 robust하게 반복
       if (autoLottieRef.current && animations.auto.data) {
         const data = animations.auto.data as Record<string, unknown>;
@@ -79,12 +79,12 @@ export default function Moktak() {
         audio.currentTime = 0;
       }
       // 상태 변경은
-  setAutoPlayState(AutoPlayState.playing);
-  } else if (autoPlayState === AutoPlayState.playing && !isManualMode) {
-        audio.play().then(() => {
-          setHitCount((c: number) => c + 1);
-        }).catch((e: unknown) => console.warn('auto audio play failed:', e));
-  } else if (autoPlayState === AutoPlayState.paused || !isManualMode) {
+      setAutoPlayState(AutoPlayState.playing);
+    } else if (autoPlayState === AutoPlayState.playing && !isManualMode) {
+      audio.play().then(() => {
+        setHitCount((c: number) => c + 1);
+      }).catch((e: unknown) => console.warn('auto audio play failed:', e));
+    } else if (autoPlayState === AutoPlayState.paused || !isManualMode) {
       autoLottieRef.current?.pause();
       if (audio) {
         audio.pause();
@@ -246,7 +246,7 @@ export default function Moktak() {
 
   // Auto pause function
   const pauseAutoPlaying = () => {
-  setAutoPlayState(AutoPlayState.paused);
+    setAutoPlayState(AutoPlayState.paused);
     // 오디오 완전 정지 및 해제
     if (autoAudioRef.current) {
       autoAudioRef.current.pause();
@@ -262,7 +262,7 @@ export default function Moktak() {
 
   // Resume auto playing
   const resumeAutoPlaying = () => {
-  setAutoPlayState(AutoPlayState.playing);
+    setAutoPlayState(AutoPlayState.playing);
     playAnimation('auto');
     playSound('auto');
   };
@@ -363,35 +363,8 @@ export default function Moktak() {
 
   return (
     <div className="h-screen bg-gradient-to-b from-white to-slate-50 relative overflow-hidden">
-      {/* Launch Animation Overlay */}
-      {showLaunchAnimation && animations.launch.data && !animations.launch.error && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white">
-          <div className="w-64 h-64">
-            <Lottie
-              lottieRef={launchLottieRef}
-              animationData={animations.launch.data}
-              autoplay={false}
-              loop={false}
-              onComplete={() => {
-                // Launch 애니메이션 완료 상태 설정
-                setIsAnimationPlaying(prev => ({ ...prev, launch: false }));
-                // 애니메이션 완료 후 1초 뒤에 사라지기
-                setTimeout(() => {
-                  setShowLaunchAnimation(false);
-                  if (!hasShownLaunchAnimation) {
-                    setHasShownLaunchAnimation(true);
-                  }
-                }, 1000);
-              }}
-              style={{ width: '100%', height: '100%' }}
-            />
-          </div>
-        </div>
-      )}
-
       {/* Main Content */}
-      <div className={`h-screen flex flex-col transition-opacity duration-500 overflow-hidden ${showLaunchAnimation ? 'opacity-0' : 'opacity-100'
-        }`}>
+      <div className={`h-screen flex flex-col transition-opacity duration-500 overflow-hidden`}>
         {/* Header with refresh button */}
         <div className="flex justify-between items-center px-4 pt-4 pb-2">
           <div className="flex items-center">
@@ -431,8 +404,8 @@ export default function Moktak() {
               <div className="flex bg-gray-300 rounded-full p-1 shadow-sm">
                 <button
                   className={`py-2 px-6 rounded-full font-semibold text-white transition-all duration-200 ${isManualMode
-                      ? 'shadow-md'
-                      : 'bg-transparent text-gray-700 hover:text-gray-900'
+                    ? 'shadow-md'
+                    : 'bg-transparent text-gray-700 hover:text-gray-900'
                     }`}
                   style={isManualMode ? { backgroundColor: '#684B45' } : {}}
                   onClick={() => setIsManualMode(true)}
@@ -441,8 +414,8 @@ export default function Moktak() {
                 </button>
                 <button
                   className={`py-2 px-6 rounded-full font-semibold text-white transition-all duration-200 ${!isManualMode
-                      ? 'shadow-md'
-                      : 'bg-transparent text-gray-700 hover:text-gray-900'
+                    ? 'shadow-md'
+                    : 'bg-transparent text-gray-700 hover:text-gray-900'
                     }`}
                   style={!isManualMode ? { backgroundColor: '#684B45' } : {}}
                   onClick={() => setIsManualMode(false)}
@@ -484,18 +457,39 @@ export default function Moktak() {
             {/* Animation Display - Fixed Height */}
             <div className="flex flex-col items-center h-64 justify-start">
               <div className="flex items-center justify-center mb-4">
-                {isManualMode ? (
-                  <div
-                    className="cursor-pointer transition-transform hover:scale-105 active:scale-95"
-                    onClick={playManualAnimationWithSound}
-                  >
-                    {renderAnimation('manual', manualLottieRef)}
-                  </div>
-                ) : (
-                  <div>
-                    {renderAnimation('auto', autoLottieRef)}
-                  </div>
-                )}
+                {showLaunchAnimation ?
+                  <Lottie
+                    lottieRef={launchLottieRef}
+                    animationData={animations.launch.data}
+                    autoplay={false}
+                    loop={false}
+                    onComplete={() => {
+                      // Launch 애니메이션 완료 상태 설정
+                      setIsAnimationPlaying(prev => ({ ...prev, launch: false }));
+                      // 애니메이션 완료 후 1초 뒤에 사라지기
+                      setTimeout(() => {
+                        setShowLaunchAnimation(false);
+                        if (!hasShownLaunchAnimation) {
+                          setHasShownLaunchAnimation(true);
+                        }
+                      }, 1000);
+                    }}
+                    style={{ width: '100%', height: '100%' }}
+                  />
+                  :
+                  isManualMode ? (
+                    <div
+                      className="cursor-pointer transition-transform hover:scale-105 active:scale-95"
+                      onClick={playManualAnimationWithSound}
+                    >
+                      {renderAnimation('manual', manualLottieRef)}
+                    </div>
+                  ) : (
+                    <div>
+                      {renderAnimation('auto', autoLottieRef)}
+                    </div>
+                  )
+                }
               </div>
 
               {/* Button Area - Fixed Position */}
@@ -503,8 +497,8 @@ export default function Moktak() {
                 {!isManualMode && (
                   <button
                     className={`px-12 py-4 rounded-full font-bold text-lg transition-colors ${animations.auto.loading
-                        ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                        : 'text-white shadow-lg hover:opacity-90'
+                      ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                      : 'text-white shadow-lg hover:opacity-90'
                       }`}
                     style={!animations.auto.loading ? {
                       backgroundColor: '#684B45'
