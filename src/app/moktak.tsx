@@ -419,9 +419,10 @@ export default function Moktak() {
                       ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
                       : 'text-white shadow-lg hover:opacity-90'
                       }`}
-                    style={!animations.auto.loading ? {
-                      backgroundColor: '#684B45'
-                    } : {}}
+                    style={{
+                      borderRadius: 8,
+                      ...(animations.auto.loading ? {} : { backgroundColor: '#684B45' })
+                    }}
                     onClick={
                       (playState === PlayState.playing || playState === PlayState.preparing)
                         ? pauseAutoPlaying
