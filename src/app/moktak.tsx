@@ -466,7 +466,7 @@ export default function Moktak() {
         </div>
 
         {/* Footer - Floating SNS icons at bottom right */}
-        <div className="fixed bottom-6 right-6 z-40">
+  <div className="fixed bottom-[20px] right-[20px] z-40">
           <div className="flex flex-col items-end">
             <a
               href="https://www.instagram.com/moktak_yc/"
