@@ -114,12 +114,7 @@ export default function Moktak() {
             autoplay={false}
             loop={false}
             onComplete={() => {
-              if ( type === AnimationType.auto ) {
-                setPlayState(PlayState.preparing)                
-              }
-              else {
-                setPlayState(PlayState.ready);
-              }
+              setPlayState(PlayState.preparing)
               console.log('onComplete called for', type);
             }}
             style={{
@@ -263,11 +258,13 @@ export default function Moktak() {
         activeLottieRef.current.pause();
       }
     } else if (playState === PlayState.preparing) {
-      // 자동 모드로, 다시 반복 재생하기
-      const timer = setTimeout(() => {
-        setPlayState(PlayState.playing);
-      }, 10);
-      return () => clearTimeout(timer);
+      if (!isManualMode) {
+        // 자동 모드로, 다시 반복 재생하기
+        const timer = setTimeout(() => {
+          setPlayState(PlayState.playing);
+        }, 10);
+        return () => clearTimeout(timer);
+      }
     }
   }, [playState, isManualMode, animations.manual.data, animations.manual.error, animations.auto.data, animations.auto.error]);
 
@@ -290,7 +287,7 @@ export default function Moktak() {
               if (hitCount > 0) {
                 setToastMessage(`${hitCount}번째 울림을 마쳤습니다.`);
                 setShowToast(true);
-                setTimeout(() => setShowToast(false), 3000);                
+                setTimeout(() => setShowToast(false), 3000);
                 setHitCount(0);
               }
               setPlayState(PlayState.ready);
@@ -347,13 +344,12 @@ export default function Moktak() {
             </div>
 
             {/* Message and Count */}
-            <div className="mb-3 text-center">              
+            <div className="mb-3 text-center">
               <h1 className="text-4xl font-bold mb-2 font-school" style={{ color: '#684B45' }}>
                 {
-                  playState === PlayState.ready && isManualMode ? '목 탁! 치기' :
-                  playState === PlayState.ready && !isManualMode ? '울림 자동재생' :
-                  playState === PlayState.playing ? '마음이 편안해지는 중'
-                  : '명상중.. 방해금지'
+                  playState === PlayState.ready ? (isManualMode ? '목 탁! 치기' : '울림 자동재생')
+                    : playState === PlayState.playing || playState === PlayState.preparing ? '마음이 편안해지는 중'
+                        : '명상중.. 방해금지'
                 }
               </h1>
               {isManualMode ? (
@@ -466,7 +462,7 @@ export default function Moktak() {
         </div>
 
         {/* Footer - Floating SNS icons at bottom right */}
-  <div className="fixed bottom-[20px] right-[20px] z-40">
+        <div className="fixed bottom-[20px] right-[20px] z-40">
           <div className="flex flex-col items-end">
             <a
               href="https://www.instagram.com/moktak_yc/"
