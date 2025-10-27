@@ -347,7 +347,7 @@ export default function Moktak() {
             </div>
 
             {/* Message and Count */}
-            <div className="mb-4 text-center">              
+            <div className="mb-8 text-center">              
               <h1 className="text-4xl font-bold mb-2 font-school" style={{ color: '#684B45' }}>
                 {
                   playState === PlayState.ready && isManualMode ? '목 탁! 치기' :
@@ -358,7 +358,7 @@ export default function Moktak() {
               </h1>
               {isManualMode ? (
                 <>
-                  <div className="text-6xl font-bold" style={{ color: '#684B45' }}>{hitCount}</div>
+                  <div className="text-4xl font-bold" style={{ color: '#684B45' }}>{hitCount}</div>
                 </>
               ) : (
                 <>
@@ -376,7 +376,7 @@ export default function Moktak() {
 
             {/* Animation Display - Fixed Height */}
             <div className="flex flex-col items-center h-64 justify-start">
-              <div className="flex items-center justify-center mb-4">
+              <div className="flex items-center justify-center mb-8">
                 {showLaunchAnimation ?
                   <Lottie
                     lottieRef={launchLottieRef}
