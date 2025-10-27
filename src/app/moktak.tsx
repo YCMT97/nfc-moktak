@@ -465,35 +465,35 @@ export default function Moktak() {
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40">
-          <div className="flex space-x-1">
+        {/* Footer - Floating SNS icons at bottom right */}
+        <div className="fixed bottom-6 right-6 z-40">
+          <div className="flex flex-col items-end">
             <a
               href="https://www.instagram.com/moktak_yc/"
               target="_blank"
               rel="noopener noreferrer"
-              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+              className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors shadow-md mb-[4px]"
               title="인스타그램"
             >
               <img
                 src={getImagePath('images/insta_icon@2x.png')}
                 srcSet={`${getImagePath('images/insta_icon.png')} 1x, ${getImagePath('images/insta_icon@2x.png')} 2x`}
                 alt="인스타그램"
-                className="w-8 h-8"
+                className="w-5 h-5"
               />
             </a>
             <a
               href="https://smartstore.naver.com/ycmoktak"
               target="_blank"
               rel="noopener noreferrer"
-              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+              className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors shadow-md"
               title="네이버 스마트스토어"
             >
               <img
                 src={getImagePath('images/naver_icon@2x.png')}
                 srcSet={`${getImagePath('images/naver_icon.png')} 1x, ${getImagePath('images/naver_icon@2x.png')} 2x`}
                 alt="네이버 스마트스토어"
-                className="w-8 h-8"
+                className="w-5 h-5"
               />
             </a>
           </div>
