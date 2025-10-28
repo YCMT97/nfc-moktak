@@ -46,6 +46,11 @@ function getImagePath(filename: string): string {
 export default function Moktak() {
   // Manual: Animation + manual sound
   const playManualAnimationWithSound = () => {
+    if (playState === PlayState.playing) {
+      // set state to preparing then change to playing again
+      console.log('Manual play requested while already playing. Restarting animation.');
+      setPlayState(PlayState.paused);
+    }
     setPlayState(PlayState.playing);
   };
 
@@ -233,8 +238,7 @@ export default function Moktak() {
         activeLottieRef.current.stop();
       }
     } else if (playState === PlayState.playing) {
-      // 오디오/애니메이션 재생 (오디오 객체는 이미 준비됨)
-      const soundPath = isManualMode ? getAudioPath('manual_sound.wav') : getAudioPath('auto_sound.wav');
+      // 오디오/애니메이션 재생 (오디오 객체는 이미 준비됨)      
       const animationData = isManualMode ? animations.manual.data : animations.auto.data;
       const animationError = isManualMode ? animations.manual.error : animations.auto.error;
       // 오디오 재생
