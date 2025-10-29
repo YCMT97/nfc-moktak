@@ -50,8 +50,12 @@ export default function Moktak() {
       // set state to preparing then change to playing again
       console.log('Manual play requested while already playing. Restarting animation.');
       setPlayState(PlayState.paused);
+      setTimeout(() => {
+        setPlayState(PlayState.playing);
+      }, 10);
+    } else {
+      setPlayState(PlayState.playing);
     }
-    setPlayState(PlayState.playing);
   };
 
   // Auto pause function
