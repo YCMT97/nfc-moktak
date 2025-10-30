@@ -1,3 +1,4 @@
+
 // Moktak React component (TypeScript)
 // Simple moktak sound player component
 
@@ -6,7 +7,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
 import Lottie, { LottieRefCurrentProps } from 'lottie-react';
-
+import ManualModeMessage from './manualMessage';
 
 enum AnimationType {
   launch = 'launch',
@@ -415,54 +416,60 @@ export default function Moktak() {
                 }
               </div>
 
-              {/* Button Area - Fixed Position */}
+              {/* Button Area or Manual Mode Message */}
               <div className="h-16 flex items-center justify-center">
-                {!isManualMode && (
-                  <button
-                    className={`font-bold text-lg transition-colors ${animations.auto.loading
-                      ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                      : 'text-white shadow-lg hover:opacity-90'
-                      }`}
-                    style={{
-                      width: 144,
-                      height: 48,
-                      borderRadius: 8,
-                      ...(animations.auto.loading ? {} : { backgroundColor: '#684B45' })
-                    }}
-                    onClick={
-                      (playState === PlayState.playing || playState === PlayState.preparing)
-                        ? pauseAutoPlaying
-                        : resumeAutoPlaying
-                    }
-                    disabled={animations.auto.loading}
-                  >
-                    <div className="flex items-center justify-center w-full h-full">
-                      <span>
-                        {animations.auto.loading
-                          ? '로딩 중...'
-                          : (playState === PlayState.playing || playState === PlayState.preparing)
-                            ? '일시정지'
-                            : playState === PlayState.paused
-                              ? '다시재생'
-                              : '자동재생'
+                {isManualMode ? (
+                  <ManualModeMessage hitCount={hitCount} />
+                ) : (
+                  <>
+                    {!isManualMode && (
+                      <button
+                        className={`font-bold text-lg transition-colors ${animations.auto.loading
+                          ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                          : 'text-white shadow-lg hover:opacity-90'
+                          }`}
+                        style={{
+                          width: 144,
+                          height: 48,
+                          borderRadius: 8,
+                          ...(animations.auto.loading ? {} : { backgroundColor: '#684B45' })
+                        }}
+                        onClick={
+                          (playState === PlayState.playing || playState === PlayState.preparing)
+                            ? pauseAutoPlaying
+                            : resumeAutoPlaying
                         }
-                      </span>
-                      {!animations.auto.loading && (
-                        <img
-                          src={(playState === PlayState.playing || playState === PlayState.preparing)
-                            ? getImagePath('images/pause_icon@2x.png')
-                            : getImagePath('images/play_icon@2x.png')
-                          }
-                          srcSet={(playState === PlayState.playing || playState === PlayState.preparing)
-                            ? `${getImagePath('images/pause_icon.png')} 1x, ${getImagePath('images/pause_icon@2x.png')} 2x`
-                            : `${getImagePath('images/play_icon.png')} 1x, ${getImagePath('images/play_icon@2x.png')} 2x`
-                          }
-                          alt={(playState === PlayState.playing || playState === PlayState.preparing) ? '일시정지' : '재생'}
-                          className="w-4 h-4 ml-2"
-                        />
-                      )}
-                    </div>
-                  </button>
+                        disabled={animations.auto.loading}
+                      >
+                        <div className="flex items-center justify-center w-full h-full">
+                          <span>
+                            {animations.auto.loading
+                              ? '로딩 중...'
+                              : (playState === PlayState.playing || playState === PlayState.preparing)
+                                ? '일시정지'
+                                : playState === PlayState.paused
+                                  ? '다시재생'
+                                  : '자동재생'
+                            }
+                          </span>
+                          {!animations.auto.loading && (
+                            <img
+                              src={(playState === PlayState.playing || playState === PlayState.preparing)
+                                ? getImagePath('images/pause_icon@2x.png')
+                                : getImagePath('images/play_icon@2x.png')
+                              }
+                              srcSet={(playState === PlayState.playing || playState === PlayState.preparing)
+                                ? `${getImagePath('images/pause_icon.png')} 1x, ${getImagePath('images/pause_icon@2x.png')} 2x`
+                                : `${getImagePath('images/play_icon.png')} 1x, ${getImagePath('images/play_icon@2x.png')} 2x`
+                              }
+                              alt={(playState === PlayState.playing || playState === PlayState.preparing) ? '일시정지' : '재생'}
+                              className="w-4 h-4 ml-2"
+                            />
+                          )}
+                        </div>
+                      </button>
+                    )}
+                  </>
                 )}
               </div>
             </div>
